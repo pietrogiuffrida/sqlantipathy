@@ -96,7 +96,7 @@ class MssqlAntipathy:
             "pietro_windows": "ODBC Driver 17 for SQL Server",
         }
 
-        if driver == None:
+        if driver is None:
             raise ValueError("driver parameter cannot be None")
 
         if driver in drivers:
