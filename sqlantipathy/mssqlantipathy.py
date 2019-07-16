@@ -300,7 +300,8 @@ class MssqlAntipathy:
 
                 multiple_values.append("(" + values + ")")
 
-                if idx > 0 and idx % record_each_statement == 0:
+                if (idx > 0 and idx % record_each_statement == 0 or
+                        idx + 1 == len_data):
 
                     statement = self.bulk_insert_statement.format(
                         table_name,
@@ -314,12 +315,13 @@ class MssqlAntipathy:
                         executions += 1
 
                     except:
-                        logger.error("Errore a idx {0}".format(idx))
+                        logger.error("Errore a idx {0}".format(idx + 1 ))
                         logger.error("Statement {}".format(statement))
                         logger.exception("")
                         return 1
 
-                if idx > 0 and idx % commit_every == 0:
+                if (idx > 0 and idx % commit_every == 0 or
+                        idx + 1 == len_data):
                     logger.info(
                         "Arrivato a {}/{} ({} executions)".format(
                             idx, len_data, executions
