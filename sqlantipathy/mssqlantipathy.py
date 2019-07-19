@@ -77,7 +77,8 @@ class MssqlAntipathy:
 
         self.cursor = self.open_cursor()
 
-    def _get_driver(self, driver):
+    @staticmethod
+    def _get_driver(driver):
         """Funzione che permette di ottenere il driver
         
         Arguments:
@@ -109,7 +110,8 @@ class MssqlAntipathy:
         """Crea stringa contenente credenziali per accedere al server MSSQL
         
         Raises:
-            ValueError: Restituisce errore se sono contemporaneamente impostate la connessione tramite username/password e autenticazione windows
+            ValueError: Restituisce errore se sono contemporaneamente impostate
+                la connessione tramite username/password e autenticazione windows
         
         Returns:
             str: Restituisce stringa di connessione
@@ -248,10 +250,10 @@ class MssqlAntipathy:
         """Inserisce una nuova riga all'interno di una tabella 
         
         Args:
-            dbname (str): Nome del database contenente la tabella a cui si vuole aggiugnere la riga
             table_name (str): Nome della tabella a cui si vuole aggiungere la riga
-            values (dict): dizionario contenente i valori che compongono la nuova riga che si desidera aggiungere
-            fields (list, optional): colonne a cui vengono associati i nuovi valori. Defaults to None.
+            values (dict): dizionario contenente i valori che compongono la nuova riga che si desidera
+                aggiungere
+            dbname (str): Nome del database contenente la tabella a cui si vuole aggiugnere la riga
         """
 
         logger.debug("insert_one {0}.{1}".format(dbname, table_name))
@@ -300,8 +302,7 @@ class MssqlAntipathy:
 
                 multiple_values.append("(" + values + ")")
 
-                if (idx > 0 and idx % record_each_statement == 0 or
-                        idx + 1 == len_data):
+                if idx > 0 and idx % record_each_statement == 0 or idx + 1 == len_data:
 
                     statement = self.bulk_insert_statement.format(
                         table_name,
@@ -315,13 +316,12 @@ class MssqlAntipathy:
                         executions += 1
 
                     except:
-                        logger.error("Errore a idx {0}".format(idx + 1 ))
+                        logger.error("Errore a idx {0}".format(idx + 1))
                         logger.error("Statement {}".format(statement))
                         logger.exception("")
                         return 1
 
-                if (idx > 0 and idx % commit_every == 0 or
-                        idx + 1 == len_data):
+                if idx > 0 and idx % commit_every == 0 or idx + 1 == len_data:
                     logger.info(
                         "Arrivato a {}/{} ({} executions)".format(
                             idx, len_data, executions
@@ -393,6 +393,7 @@ class MssqlAntipathy:
             logger.exception("")
             return 1
 
+    @staticmethod
     def _handle_datetimeoffset(dto_value):
         # ref: https://github.com/mkleehammer/pyodbc/issues/134#issuecomment-281739794
         # https://github.com/mkleehammer/pyodbc/wiki/Using-an-Output-Converter-function
@@ -410,7 +411,8 @@ class MssqlAntipathy:
             timezone(timedelta(hours=tup[7], minutes=tup[8])),
         )
 
-    def _sql_clean(self, value):
+    @staticmethod
+    def _sql_clean(value):
         """Pulisce valori nulli e stringhe.
 
         Ricevuto il valore da inserire nel db, esegue dei controlli per codificare
