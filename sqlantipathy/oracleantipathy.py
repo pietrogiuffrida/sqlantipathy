@@ -3,13 +3,10 @@
 import base64
 from time import sleep
 from collections import Counter
-import os
 import re
-import json
 import cx_Oracle as mdb
 import os
 import csv
-# import fiona
 import logging
 import numpy as np
 
