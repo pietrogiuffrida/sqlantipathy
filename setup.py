@@ -1,11 +1,25 @@
 from setuptools import setup
 
-setup(name='sqlantipathy',
-      version='0.1',
-      description='Python library to easily work with SQL DB',
-      url='https://github.com/pietrogiuffrida/sqlantipathy/',
-      author='Pietro Giuffrida',
-      author_email='pietro.giuffri@gmail.com',
-      license='GPL V3.0',
-      packages=['sqlantipathy'],
-      zip_safe=False)
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+
+setup(
+    name="sqlantipathy",
+    version="0.0.1",
+    url="https://github.com/pietrogiuffrida/sqlantipathy/",
+    author="Pietro Giuffrida",
+    author_email="pietro.giuffri@gmail.com",
+    license="MIT",
+    packages=["sqlantipathy"],
+    zip_safe=False,
+    install_requires=[],
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+    ],
+    description='Python library to work with SQL DB',
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+)
+
