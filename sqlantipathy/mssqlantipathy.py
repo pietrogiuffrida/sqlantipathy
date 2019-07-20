@@ -9,10 +9,13 @@ import pyodbc
 from datetime import datetime, timezone, timedelta
 import logging
 
-from . import SqlAntipathy
+from sqlantipathy import SqlAntipathy
 
 logger = logging.getLogger(__name__)
 logger.setLevel("DEBUG")
+
+mssql_redhat_driver = "/opt/microsoft/msodbcsql17/lib64/libmsodbcsql-17.2.so.0.1",
+mssql_windows_driver = "SQL Server"
 
 
 class MssqlAntipathy(SqlAntipathy):
@@ -21,22 +24,22 @@ class MssqlAntipathy(SqlAntipathy):
     connection_string = "DRIVER={{{driver}}};SERVER={hostname}"
 
     show_tables_query = """SELECT Distinct TABLE_NAME FROM information_schema.TABLES"""
-    show_databases_query = """SELECT * FROM SYS.DATABASES WHERE NAME NOT IN('MASTER', 'TEMPDB', 'MODEL', 'MSDB');"""
+    show_databases_query = """SELECT * FROM SYS.DATABASES WHERE NAME NOT IN('MASTER', 'TEMPDB', 'MODEL', 'MSDB')"""
     insert_statement = """INSERT INTO {0} ({1}) VALUES ({2})"""
 
     bulk_insert_statement = """INSERT INTO {0} ({1}) VALUES {2}"""
 
     def __init__(
-        self,
-        hostname,
-        user,
-        password,
-        trusted_connection=False,
-        driver=None,
-        autocommit=False,
-        timeout=10,
-        datetime_converter=True,
-        connect=False,
+            self,
+            hostname,
+            user,
+            password,
+            trusted_connection=False,
+            driver=None,
+            autocommit=False,
+            timeout=10,
+            datetime_converter=True,
+            connect=False,
     ):
         """Definizione dei parametri necessari per la connessione al server MSSQL
         
@@ -55,40 +58,11 @@ class MssqlAntipathy(SqlAntipathy):
         logger.debug("Creating an instance of sqlConnection")
 
         self.trusted_connection = trusted_connection
+        self.driver = driver
 
         self.autocommit = autocommit
         self.timeout = timeout
         self.datetime_converter = datetime_converter
-
-        self.driver = self.get_driver(driver)
-
-    @staticmethod
-    def get_driver(driver):
-        """Funzione che permette di ottenere il driver
-
-        Arguments:
-            driver (str): Nome del driver richiesto
-
-        Raises:
-            ValueError: Restitusce errore se il driver è un oggetto di tipo None
-
-        Returns:
-            str: Restituisce il percorso del driver
-        """
-
-        drivers = {
-            "redhat": "/opt/microsoft/msodbcsql17/lib64/libmsodbcsql-17.2.so.0.1",
-            "windows": "SQL Server",
-        }
-
-        if driver is None:
-            raise ValueError("driver parameter cannot be None")
-
-        if driver in drivers:
-            driver = drivers[driver]
-
-        logger.debug("Using driver {}".format(driver))
-        return driver
 
     def make_connection_string(self):
         """Crea stringa contenente credenziali per accedere al server MSSQL
