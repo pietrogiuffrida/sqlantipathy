@@ -2,21 +2,18 @@
 # -*- coding: utf-8 -*-
 
 import re
-import pyodbc
 import numpy as np
 import logging
+
+from .mssqlantipathy import MssqlAntipathy
 
 logger = logging.getLogger(__name__)
 logger.setLevel("DEBUG")
 
 
-class SqlAntipathy:
+class SqlBasic:
 
-    connection_string = "{user} {password} {hostname}"
-
-    show_tables_query = ""
-    show_databases_query = ""
-    insert_statement = """INSERT INTO {0} ({1}) VALUES ({2})"""
+    connection_string_schema = "{user} {password} {hostname}"
 
     def __init__(
             self,
@@ -24,18 +21,20 @@ class SqlAntipathy:
             user,
             password,
             timeout,
-            connect=False
-        ):
-
+    ):
         self.hostname = hostname
         self.user = user
         self.password = password
         self.timeout = timeout
 
-        self.connection_string = self.make_connection_string()
-
+        self.connection_string = None
         self.connection = None
         self.cursor = None
+
+    def connect(self):
+        self.make_connection_string()
+        self.open_connection()
+        self.open_cursor()
 
     def make_connection_string(self):
         """Format a valid connection string for each db
@@ -47,16 +46,11 @@ class SqlAntipathy:
         Returns:
             a valid connection string
         """
-        connection_string = self.connection_string.format(
+        self.connection_string = self.connection_string_schema.format(
             hostname=self.hostname,
             user=self.user,
             password=self.password,
         )
-        return connection_string
-
-    def connect(self):
-        self.connection = self.open_connection()
-        self.cursor = self.open_cursor()
 
     def open_connection(self):
         """Open and returns a connection to the db.
@@ -70,15 +64,50 @@ class SqlAntipathy:
             ```connection = pyodbc.connect(self.connection_string, timeout=self.timeout)```
         """
         print(self.connection_string)
-        connection = None
-        return connection
+        self.connection = None
 
     def open_cursor(self):
         logger.debug("Opening cursor")
         return self.connection.cursor()
 
+    def commit(self):
+        self.cursor.commit()
+
+    def close_connection(self):
+        logger.debug("Closing connection")
+        self.connection.close()
+
+
+class SqlAntipathy(SqlBasic):
+
+    show_tables_query = "SHOW TABLES"
+    show_databases_query = "SHOW DATABASES"
+    use_database_statement = "USE {}"
+    insert_statement = """INSERT INTO {0} ({1}) VALUES ({2})"""
+
+    def __init__(self, hostname, user, password, timeout, connect=False):
+
+        super().__init__(hostname, user, password, timeout)
+        self.hostname = hostname
+        self.user = user
+        self.password = password
+        self.timeout = timeout
+
     def use_database(self, dbname):
-        self.cursor.execute("USE {}".format(dbname))
+        self.cursor.execute(
+            self.use_database_statement.format(dbname)
+        )
+
+    def show_databases(self):
+        self.cursor.execute(self.show_databases_query)
+        databases = self.cursor.fetchall()
+        return [i[0] for i in databases]
+
+    def show_tables(self, dbname):
+        self.use_database(dbname)
+        self.cursor.execute(self.show_tables_query)
+        tables = self.cursor.fetchall()
+        return [i[0] for i in tables]
 
     def retrieve(self, dbname, qry):
         """Run a query and collect all results
@@ -190,24 +219,6 @@ class SqlAntipathy:
 
         This method must be re-writed for each db engine."""
         pass
-
-    def show_databases(self):
-        self.cursor.execute(self.show_databases_query)
-        databases = self.cursor.fetchall()
-        return [i[0] for i in databases]
-
-    def show_tables(self, dbname):
-        self.use_database(dbname)
-        self.cursor.execute(self.show_tables_query)
-        tables = self.cursor.fetchall()
-        return [i[0] for i in tables]
-
-    def commit(self):
-        self.cursor.commit()
-
-    def close_connection(self):
-        logger.debug("Closing connection")
-        self.connection.close()
 
     def make_list_of_values(self, values_dict, list_of_columns=None, missing_value=None):
         if not list_of_columns:

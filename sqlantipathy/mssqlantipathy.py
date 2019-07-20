@@ -21,13 +21,23 @@ class MssqlAntipathy(SqlAntipathy):
     connection_string = "DRIVER={{{driver}}};SERVER={hostname}"
 
     show_tables_query = """SELECT Distinct TABLE_NAME FROM information_schema.TABLES"""
-    show_databases_query = """select * from sys.databases WHERE name NOT IN('master', 'tempdb', 'model', 'msdb');"""
+    show_databases_query = """SELECT * FROM SYS.DATABASES WHERE NAME NOT IN('MASTER', 'TEMPDB', 'MODEL', 'MSDB');"""
     insert_statement = """INSERT INTO {0} ({1}) VALUES ({2})"""
 
     bulk_insert_statement = """INSERT INTO {0} ({1}) VALUES {2}"""
 
-    def __init__(self, hostname, user, password, trusted_connection=False, driver=None,
-                 autocommit=False, timeout=10, datetime_converter=True, connect=False):
+    def __init__(
+        self,
+        hostname,
+        user,
+        password,
+        trusted_connection=False,
+        driver=None,
+        autocommit=False,
+        timeout=10,
+        datetime_converter=True,
+        connect=False,
+    ):
         """Definizione dei parametri necessari per la connessione al server MSSQL
         
         Args:
@@ -50,38 +60,18 @@ class MssqlAntipathy(SqlAntipathy):
         self.timeout = timeout
         self.datetime_converter = datetime_converter
 
-        self.driver = self._get_driver(driver)
-        self.connection_string = self.make_connection_string()
+        self.driver = self.get_driver(driver)
 
-    def open_connection(self):
-
-        try:
-            logger.debug("Tring to connect")
-            connection = pyodbc.connect(self.connection_string, timeout=self.timeout)
-        except:
-            logger.error("COULD NOT PERFORM CONNECTION TO DB")
-            logger.exception("")
-            raise ConnectionError("Connection failed!")
-
-        if self.datetime_converter:
-            logger.debug("Enabling datetime_converter")
-            connection.add_output_converter(-155, self._handle_datetimeoffset)
-
-        if self.autocommit:
-            logger.debug("Enabling autocommit")
-            connection.autocommit = True
-
-        return connection
-
-    def _get_driver(self, driver):
+    @staticmethod
+    def get_driver(driver):
         """Funzione che permette di ottenere il driver
-        
+
         Arguments:
             driver (str): Nome del driver richiesto
-                    
+
         Raises:
             ValueError: Restitusce errore se il driver è un oggetto di tipo None
-        
+
         Returns:
             str: Restituisce il percorso del driver
         """
@@ -89,7 +79,6 @@ class MssqlAntipathy(SqlAntipathy):
         drivers = {
             "redhat": "/opt/microsoft/msodbcsql17/lib64/libmsodbcsql-17.2.so.0.1",
             "windows": "SQL Server",
-            "pietro_windows": "ODBC Driver 17 for SQL Server",
         }
 
         if driver is None:
@@ -103,14 +92,13 @@ class MssqlAntipathy(SqlAntipathy):
 
     def make_connection_string(self):
         """Crea stringa contenente credenziali per accedere al server MSSQL
-        
+
         Raises:
             ValueError: Restituisce errore se sono contemporaneamente impostate la connessione tramite username/password e autenticazione windows
-        
+
         Returns:
             str: Restituisce stringa di connessione
         """
-
         mssql_connection_string = self.connection_string.format(
             driver=self.driver, hostname=self.hostname
         )
@@ -130,13 +118,34 @@ class MssqlAntipathy(SqlAntipathy):
             mssql_connection_string += ";UID={user}".format(user=self.user)
 
         if self.password:
-            mssql_connection_string += ";password={password}".format(password=self.password)
+            mssql_connection_string += ";password={password}".format(
+                password=self.password
+            )
 
         logger.debug("Connection string: {}".format(mssql_connection_string))
 
         return mssql_connection_string
 
-    def retrieve_table(self, dbname, qry, json_fields=[]):
+    def open_connection(self):
+        try:
+            logger.debug("Tring to connect")
+            connection = pyodbc.connect(self.connection_string, timeout=self.timeout)
+        except:
+            logger.error("COULD NOT PERFORM CONNECTION TO DB")
+            logger.exception("")
+            raise ConnectionError("Connection failed!")
+
+        if self.datetime_converter:
+            logger.debug("Enabling datetime_converter")
+            connection.add_output_converter(-155, self._handle_datetimeoffset)
+
+        if self.autocommit:
+            logger.debug("Enabling autocommit")
+            connection.autocommit = True
+
+        return connection
+
+    def retrieve_table(self, dbname, qry, json_fields=None):
         """Run the query and returns a list of dict
 
         It overwrites original retrieve_table to enable json field parsing.
@@ -150,6 +159,10 @@ class MssqlAntipathy(SqlAntipathy):
             list of dict
         """
         logger.debug("Parsing data")
+
+        if json_fields is None:
+            json_fields = []
+
         values = self.retrieve(dbname=dbname, qry=qry)
         keys = [i[0] for i in self.cursor.description]
 
@@ -167,22 +180,15 @@ class MssqlAntipathy(SqlAntipathy):
 
         return data
 
-    def bulk_insertion(self, list_of_columns, data_as_dict,
-                       dbname, table_name, commit_every=5000,
-                       record_each_statement=200):
-        """
-
-        Args:
-            list_of_columns:
-            data_as_dict:
-            dbname:
-            table_name:
-            commit_every:
-            record_each_statement:
-
-        Returns:
-
-        """
+    def bulk_insertion(
+            self,
+            table_name,
+            list_of_columns,
+            data_as_dict,
+            dbname,
+            record_each_statement=200,
+            commit_every=5000,
+    ):
 
         logger.debug("bulk_insertion {0}.{1}".format(dbname, table_name))
 
@@ -191,6 +197,8 @@ class MssqlAntipathy(SqlAntipathy):
         len_data = len(data_as_dict)
         executions = 0
 
+        idx = None
+        row = None
         try:
             multiple_values = []
             for idx, row in enumerate(data_as_dict):
@@ -201,8 +209,7 @@ class MssqlAntipathy(SqlAntipathy):
 
                 multiple_values.append("(" + values + ")")
 
-                if (idx > 0 and idx % record_each_statement == 0 or
-                        idx + 1 == len_data):
+                if idx > 0 and idx % record_each_statement == 0 or idx + 1 == len_data:
 
                     statement = self.bulk_insert_statement.format(
                         table_name,
@@ -216,13 +223,12 @@ class MssqlAntipathy(SqlAntipathy):
                         executions += 1
 
                     except:
-                        logger.error("Errore a idx {0}".format(idx + 1 ))
+                        logger.error("Errore a idx {0}".format(idx + 1))
                         logger.error("Statement {}".format(statement))
                         logger.exception("")
                         return 1
 
-                if (idx > 0 and idx % commit_every == 0 or
-                        idx + 1 == len_data):
+                if idx > 0 and idx % commit_every == 0 or idx + 1 == len_data:
                     logger.info(
                         "Arrivato a {}/{} ({} executions)".format(
                             idx, len_data, executions
