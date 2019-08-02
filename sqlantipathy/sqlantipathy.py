@@ -25,7 +25,6 @@ class SqlBasic:
         self.password = password
         self.timeout = timeout
 
-        self.connection_string = None
         self.connection = None
         self.cursor = None
 
