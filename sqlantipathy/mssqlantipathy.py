@@ -89,7 +89,7 @@ class MssqlAntipathy(SqlAntipathy):
             mssql_connection_string += ";UID={user}".format(user=self.user)
 
         if self.password:
-            mssql_connection_string += ";password={password}".format(
+            mssql_connection_string += ";PWD={password}".format(
                 password=self.password
             )
 
