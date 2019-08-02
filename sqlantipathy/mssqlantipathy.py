@@ -14,7 +14,7 @@ from sqlantipathy import SqlAntipathy
 logger = logging.getLogger(__name__)
 logger.setLevel("DEBUG")
 
-mssql_redhat_driver = "/opt/microsoft/msodbcsql17/lib64/libmsodbcsql-17.2.so.0.1",
+mssql_redhat_driver = "/opt/microsoft/msodbcsql17/lib64/libmsodbcsql-17.2.so.0.1"
 mssql_windows_driver = "SQL Server"
 
 
@@ -95,7 +95,7 @@ class MssqlAntipathy(SqlAntipathy):
 
         logger.debug("Connection string: {}".format(mssql_connection_string))
 
-        return mssql_connection_string
+        self.connection_string = mssql_connection_string
 
     def open_connection(self):
         try:
