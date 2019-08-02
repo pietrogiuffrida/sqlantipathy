@@ -102,7 +102,7 @@ class MssqlAntipathy(SqlAntipathy):
     def open_connection(self):
         try:
             logger.debug("Tring to connect")
-            connection = pyodbc.connect(self.connection_string, timeout=self.timeout)
+            self.connection = pyodbc.connect(self.connection_string, timeout=self.timeout)
         except:
             logger.error("COULD NOT PERFORM CONNECTION TO DB")
             logger.exception("")
@@ -110,13 +110,12 @@ class MssqlAntipathy(SqlAntipathy):
 
         if self.datetime_converter:
             logger.debug("Enabling datetime_converter")
-            connection.add_output_converter(-155, self._handle_datetimeoffset)
+            self.connection.add_output_converter(-155, self._handle_datetimeoffset)
 
         if self.autocommit:
             logger.debug("Enabling autocommit")
-            connection.autocommit = True
+            self.connection.autocommit = True
 
-        return connection
 
     def retrieve_table(self, dbname, qry, json_fields=None):
         """Run the query and returns a list of dict

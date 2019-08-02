@@ -65,7 +65,7 @@ class SqlBasic:
 
     def open_cursor(self):
         logger.debug("Opening cursor")
-        return self.connection.cursor()
+        self.cursor = self.connection.cursor()
 
     def commit(self):
         self.cursor.commit()
