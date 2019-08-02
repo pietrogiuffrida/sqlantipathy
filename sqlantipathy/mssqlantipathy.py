@@ -14,9 +14,6 @@ from sqlantipathy import SqlAntipathy
 logger = logging.getLogger(__name__)
 logger.setLevel("DEBUG")
 
-mssql_redhat_driver = "/opt/microsoft/msodbcsql17/lib64/libmsodbcsql-17.2.so.0.1"
-mssql_windows_driver = "SQL Server"
-
 
 class MssqlAntipathy(SqlAntipathy):
     """Libreria per gestire la connessione a un server MSSQl"""
@@ -28,6 +25,11 @@ class MssqlAntipathy(SqlAntipathy):
     insert_statement = """INSERT INTO {0} ({1}) VALUES ({2})"""
 
     bulk_insert_statement = """INSERT INTO {0} ({1}) VALUES {2}"""
+
+    drivers = {
+        'redhat': "/opt/microsoft/msodbcsql17/lib64/libmsodbcsql-17.2.so.0.1",
+        "windows": "SQL Server",
+    }
 
     def __init__(
             self,
@@ -58,7 +60,7 @@ class MssqlAntipathy(SqlAntipathy):
         logger.debug("Creating an instance of sqlConnection")
 
         self.trusted_connection = trusted_connection
-        self.driver = driver
+        self.driver = self.drivers[driver]
 
         self.autocommit = autocommit
         self.timeout = timeout
