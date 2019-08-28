@@ -18,7 +18,7 @@ logger.setLevel("DEBUG")
 class MssqlAntipathy(SqlAntipathy):
     """Libreria per gestire la connessione a un server MSSQl"""
 
-    connection_string = "DRIVER={{{driver}}};SERVER={hostname}"
+    empty_connection_string = "DRIVER={{{driver}}};SERVER={hostname}"
 
     show_tables_query = """SELECT Distinct TABLE_NAME FROM information_schema.TABLES"""
     show_databases_query = """SELECT * FROM SYS.DATABASES WHERE NAME NOT IN('MASTER', 'TEMPDB', 'MODEL', 'MSDB')"""
@@ -72,7 +72,7 @@ class MssqlAntipathy(SqlAntipathy):
         Returns:
             str: Restituisce stringa di connessione
         """
-        mssql_connection_string = self.connection_string.format(
+        self.connection_string = self.empty_connection_string.format(
             driver=self.driver, hostname=self.hostname
         )
 
@@ -85,19 +85,18 @@ class MssqlAntipathy(SqlAntipathy):
             )
 
         if self.trusted_connection:
-            mssql_connection_string += ";Trusted_Connection=yes"
+            self.connection_string += ";Trusted_Connection=yes"
 
         if self.user:
-            mssql_connection_string += ";UID={user}".format(user=self.user)
+            self.connection_string += ";UID={user}".format(user=self.user)
 
         if self.password:
-            mssql_connection_string += ";PWD={password}".format(
+            self.connection_string += ";PWD={password}".format(
                 password=self.password
             )
 
-        logger.debug("Connection string: {}".format(mssql_connection_string))
+        logger.debug("Connection string: {}".format(self.connection_string))
 
-        self.connection_string = mssql_connection_string
 
     def open_connection(self):
         try:
