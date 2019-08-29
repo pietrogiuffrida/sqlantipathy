@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setup(
       name="sqlantipathy",
-      version="0.0.71",
+      version="0.0.72",
       url="https://github.com/pietrogiuffrida/sqlantipathy/",
       author="Pietro Giuffrida",
       author_email="pietro.giuffri@gmail.com",

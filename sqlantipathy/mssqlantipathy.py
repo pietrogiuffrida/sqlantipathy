@@ -20,7 +20,7 @@ class MssqlAntipathy(SqlAntipathy):
 
     empty_connection_string = "DRIVER={{{driver}}};SERVER={hostname}"
 
-    show_table_schema_qry = """SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{tablename}'"""
+    show_table_schema_qry = """SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{table_name}'"""
     show_tables_query = """SELECT Distinct TABLE_NAME FROM information_schema.TABLES"""
     show_databases_query = """SELECT * FROM SYS.DATABASES WHERE NAME NOT IN('MASTER', 'TEMPDB', 'MODEL', 'MSDB')"""
     insert_statement = """INSERT INTO {0} ({1}) VALUES ({2})"""
@@ -260,6 +260,6 @@ class MssqlAntipathy(SqlAntipathy):
     def show_table_schema(self, dbname, table_name):
         schema = self.retrieve_table(
             dbname=dbname,
-            qry=self.show_table_schema_qry.format(table_name)
+            qry=self.show_table_schema_qry.format(table_name=table_name)
         )
         return schema
