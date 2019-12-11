@@ -111,7 +111,7 @@ class SqlAntipathy(SqlBasic):
 
         Args:
             dbname (str): the name of the query
-            qry (str): a query string
+            qry (str or filetype object): a query string
 
         Returns:
             list: a list of tuple, the results of the query
@@ -120,7 +120,13 @@ class SqlAntipathy(SqlBasic):
         self.use_database(dbname=dbname)
 
         logger.debug("Running query")
-        self.cursor.execute(qry)
+
+        if isinstance(qry, str):
+            self.cursor.execute(qry)
+        elif hasattr(qry, 'read'):
+            self.cursor.execute(qry.read())
+        else:
+            raise ValueError('qry must me a string or a file type object with read method!')
 
         logger.debug("Reading data")
         return self.cursor.fetchall()
