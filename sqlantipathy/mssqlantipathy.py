@@ -35,8 +35,8 @@ class MssqlAntipathy(SqlAntipathy):
     def __init__(
             self,
             hostname,
-            user,
-            password,
+            user=None,
+            password=None,
             trusted_connection=False,
             driver=None,
             autocommit=False,
