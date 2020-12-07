@@ -1,5 +1,5 @@
 # sqlantipathy
-Python facilities to easily work with SQL databases
+Python facilities to work with SQL databases
 
 Ok, I don't love work with SQL databases. But the world works with SQL, then...
 
@@ -7,8 +7,7 @@ During last years I wrote lot of function to work with MSSQL, MySQL, Oracle, SQL
 This project represent my personal attempt to systematize experiences, code,
 and approaches in few useful classes.
 
-Of course sqlalchemy is a sort of *de facto* standard in python/SQL approach,
-and my package will never be such mature... but in my opinion it is not so simple and not ever
+Of course sqlalchemy is a sort of *de facto* standard in python/SQL approach, but in my opinion it is not so simple and not ever
 backward compatibility is guaranteed with pyodbc and other low level libraries.
 
 At this moment master branch only implements MSSQL routines.
@@ -53,6 +52,23 @@ if __name__ == '__main__':
 
     list_of_dict = sql.retrieve_table("sql_input_db", qry)
     df = pd.DataFrame(list_of_dict)
+    
+    tables = sql.show_tables(dbname='mydb')
+    
+    sql_exit_code = sql.bulk_insertion(
+        list_of_columns=column_names,
+        data_as_dict=list_of_dict,
+        dbname="mydb",
+        table_name="mytable",
+        commit_every=15000,
+        record_each_statement=500,
+    )
+    
+    sql_exit_code = sql.insert_one(
+        table_name="mytable",
+        values=dictionary_of_values,
+        dbname="mydb"
+    )
 
     sql.close_connection()
 
