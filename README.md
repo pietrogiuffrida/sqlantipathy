@@ -36,7 +36,7 @@ if __name__ == '__main__':
     sql = MssqlAntipathy(
         hostname="sql_hostname",
         user="sql_user",
-        pwd="sql_pwd",
+        password="sql_pwd",
         driver="sql_driver_name"
     )
 
