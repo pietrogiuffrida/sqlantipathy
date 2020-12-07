@@ -51,7 +51,7 @@ if __name__ == '__main__':
     qry = """SELECT TOP 100 * FROM TABLENAME"""
     data = sql.retrieve("sql_input_db", qry)
 
-    list_of_dict = sql.retrieve("sql_input_db", qry)
+    list_of_dict = sql.retrieve_table("sql_input_db", qry)
     df = pd.DataFrame(list_of_dict)
 
     sql.close_connection()
